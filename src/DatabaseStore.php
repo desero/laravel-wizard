@@ -74,7 +74,7 @@ class DatabaseStore implements CacheStore
             return 0;
         }
 
-        return isset($data[$this->name]) ? ($key ? Arr::get($data[$this->name], $key) : $data[$this->name]) : 0;
+        return isset($data[$this->name]) ? ($key ? Arr::get($data[$this->name], $key) : $data[$this->name]) : [];
     }
 
     /**
