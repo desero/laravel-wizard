@@ -133,9 +133,7 @@ trait Wizardable
             }
 
             // Wizard ended event.
-            $this->wizardEnded($request, $data);
-
-            return $this->redirectToDone($data);
+            return $this->wizardEnded($request, $data);
         }
 
         return $this->redirectTo();
@@ -545,6 +543,6 @@ trait Wizardable
      */
     protected function wizardEnded(Request $request, $data)
     {
-        //
+        return $this->redirectToDone($data);
     }
 }
