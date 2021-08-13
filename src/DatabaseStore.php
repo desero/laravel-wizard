@@ -25,6 +25,13 @@ class DatabaseStore implements CacheStore
     protected $table;
 
     /**
+     * The name of the wizard so we can store multiple wizards.
+     *
+     * @var string
+     */
+    protected $name;
+
+    /**
      * The container instance.
      *
      * @var \Illuminate\Contracts\Container\Container
@@ -39,11 +46,12 @@ class DatabaseStore implements CacheStore
      * @param  \Illuminate\Contracts\Container\Container|null  $container
      * @return void
      */
-    public function __construct(ConnectionInterface $connection, $table, Container $container = null)
+    public function __construct(ConnectionInterface $connection, $table, $name, Container $container = null)
     {
         $this->connection = $connection;
         $this->table = $table;
         $this->container = $container;
+        $this->name = $name;
     }
 
     /**
@@ -62,7 +70,11 @@ class DatabaseStore implements CacheStore
 
         $data = json_decode($data['payload'], true);
 
-        return $key ? Arr::get($data, $key) : $data;
+        if ($key == '_last_index' && !isset($data[$this->name])) {
+            return 0;
+        }
+
+        return isset($data[$this->name]) ? ($key ? Arr::get($data[$this->name], $key) : $data[$this->name]) : 0;
     }
 
     /**
@@ -89,6 +101,12 @@ class DatabaseStore implements CacheStore
         }
 
         $data = ['payload' => json_encode($data)];
+        $old_data = $this->getSelectedQuery()->first();
+        if ($old_data) {
+            $data = ['payload' => json_encode(array_merge(json_decode($old_data->payload, true), [$this->name => $data]))];
+        } else {
+            $data = ['payload' => json_encode([$this->name => $data])];
+        }
 
         if ($this->userId()) {
             $this->getQuery()->updateOrInsert(['user_id' => $this->userId()], $data);
@@ -132,7 +150,20 @@ class DatabaseStore implements CacheStore
      */
     public function clear()
     {
-        $this->getSelectedQuery()->delete();
+        $data = $this->getSelectedQuery()->first();
+        $data = json_decode($data->payload, true);
+
+        if (isset($data[$this->name]) && count($data) == 1) {
+            $this->getSelectedQuery()->delete();
+        } else if (isset($data[$this->name])) {
+            unset($data[$this->name]);
+
+            if ($this->userId()) {
+                $this->getQuery()->updateOrInsert(['user_id' => $this->userId()], ['payload' => $data]);
+            } else {
+                $this->getQuery()->updateOrInsert(['ip_address' => $this->ipAddress()], ['payload' => $data]);
+            }
+        }
     }
 
     /**

@@ -66,7 +66,7 @@ class CacheManager extends Manager
     {
         $table = $this->wizard->option('table');
 
-        return new DatabaseStore($this->getDatabaseConnection(), $table, $this->app);
+        return new DatabaseStore($this->getDatabaseConnection(), $table, $this->wizard->getName(), $this->app);
     }
 
     /**
