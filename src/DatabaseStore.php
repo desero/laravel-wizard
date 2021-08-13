@@ -100,7 +100,6 @@ class DatabaseStore implements CacheStore
             $data['_last_index'] = $lastIndex;
         }
 
-        $data = ['payload' => json_encode($data)];
         $old_data = $this->getSelectedQuery()->first();
         if ($old_data) {
             $data = ['payload' => json_encode(array_merge(json_decode($old_data->payload, true), [$this->name => $data]))];
