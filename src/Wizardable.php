@@ -94,7 +94,10 @@ trait Wizardable
 
         // Check if cancel was clicked
         if ($request->query('_trigger') === 'cancel') {
-            $this->wizard()->cache()->clear();
+            $data = $this->wizard()->cache()->get();
+            if (!empty($data)) {
+                $this->wizard()->cache()->clear();
+            }
             // Wizard ended event.
             return $this->wizardEnded($request, []);
         }
