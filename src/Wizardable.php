@@ -92,6 +92,13 @@ trait Wizardable
 
         $step = $this->getWizardStep($request, $step);
 
+        // Check if cancel was clicked
+        if ($request->query('_trigger') === 'cancel') {
+            $this->wizard()->cache()->clear();
+            // Wizard ended event.
+            return $this->wizardEnded($request, []);
+        }
+
         // Form validation.
         if ($this->canValidate($request)) {
             $this->validate(
